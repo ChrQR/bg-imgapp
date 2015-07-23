@@ -7,21 +7,21 @@ GameLogic::GameLogic()
 	//skriv program her
 
 	//white total value
-	iWhiteTotal = 167;
+	int iWhiteTotal = 167;
 	//white current value
-	iWhiteCurrent = 167;
+	int iWhiteCurrent = 167;
 
 	//black total value
-	iBlackTotal = 167;
+	int iBlackTotal = 167;
 	//black current value
-	iBlackCurrent = 167;
+	int iBlackCurrent = 167;
 
 	Tile Tiles[2][13];
-	for (int i = 0; i < 2; i++)//defines the 26 tiles later to define their pos aswell
+	for (int i = 0; i < 2; i++) //defines the number of tiles in the height
 	{
-		for (int j = 0; j < 13; j++)
+		for (int j = 0; j < 13; j++) //defines the number og tiles width
 		{
-			Tiles[i][j] = new Tile();
+			Tiles[i][j] = new Tile(); 
 		}
 	}
 		
