@@ -78,7 +78,6 @@ void EditingTrackbar()
 	createTrackbar("P Hue-MIN", "Editor", &H_MIN1, 255); createTrackbar("P Hue-MAX", "Editor", &H_MAX1, 255);
 	createTrackbar("P Sat-MIN", "Editor", &S_MIN1, 255); createTrackbar("P Sat-MAX", "Editor", &S_MAX1, 255);
 	createTrackbar("P Val-MIN", "Editor", &V_MIN1, 255); createTrackbar("P Val-MAX", "Editor", &V_MAX1, 255);
-	createTrackbar("Obj Size", "Editor", &objectSize, 10000);
 }
 
 //Saving configuration to a txt file
@@ -107,8 +106,7 @@ void writeConfigurations()
 			<< "S_MIN2 = \n" << S_MIN2 << endl
 			<< "S_MAX2 = \n" << S_MAX2 << endl
 			<< "V_MIN2 = \n" << V_MIN2 << endl
-			<< "V_MAX2 = \n" << V_MAX2 << endl
-			<< "Size = \n" << shootingThreshold << endl;
+			<< "V_MAX2 = \n" << V_MAX2 << endl;
 
 		//Ensures that the file is properly closed once the program is done writing.
 		calibrationFile.close();
@@ -207,7 +205,7 @@ void morphOps(Mat &thresh)
 	//dilate(thresh, thresh, erodeElement, Point(-1, -1), 1);
 }
 
-
+// TODO: Rediger her for at tracke spillernes brikker
 vector<int> findCoords(Mat threshold)
 {
 	vector<int> blobProperties(3);
@@ -232,6 +230,7 @@ vector<int> findCoords(Mat threshold)
 				//This finds objects, if area is lesser than min_area it is probably noise
 				if (area > 10)//1728 is the Minimum object area
 				{
+					// TODO: Forøg det antal objecter der bliver fundet
 					blobProperties[0] = (int)(moment.m10 / area);//BLOB X
 					blobProperties[1] = (int)(moment.m01 / area);//BLOB Y
 					blobProperties[2] = (int)area;//BLOB Area
@@ -426,27 +425,6 @@ int main()
 	namedWindow("Thresholded Player 2 Controllers", WINDOW_NORMAL); resizeWindow("Thresholded Player 2 Controllers", 640, 360);
 	EditingTrackbar();
 
-
-
-
-
-
-	for (int i = 0; i < 2; i++)
-	{
-		for (int j = 0; j < 13; j++)
-		{
-			Tiles[i][j] = new Tile();
-		}
-	}
-
-
-
-
-
-
-
-
-
 	//Call the help function to make sure people know how to work the program.
 	help();
 
@@ -481,8 +459,8 @@ int main()
 			//Display frame and Thresholded frame
 			imshow("Original Frame", cameraFeed);
 			imshow("Subtracted Image", subtracted);
-			imshow("Thresholded Power Controllers", HsvThreshold1);
-			imshow("Thresholded Angle Controllers", HsvThreshold2);
+			imshow("Thresholded Player 1 Pieces", HsvThreshold1);
+			imshow("Thresholded Player 2 Pieces", HsvThreshold2);
 		}
 		else//If not editing.
 			broadcast();//Converts coordinates and broadcasts the values to Unity3D
@@ -499,9 +477,9 @@ int main()
 			bool shooting Shot-state
 			*/
 
-			cout << "\nAngle Controllers: (" << location[0] << "," << location[1] << ")\n"
-				<< "Power Controllers: (" << location[2] << "," << location[3] << ")\n"
-				<< "Current size: " << currentArea << ". Shooting state: " << shooting << endl;
+			cout << "\nPlayer 1 Pieces: (" << location[0] << "," << location[1] << ")\n"
+				<< "Player 2 Pieces: (" << location[2] << "," << location[3] << ")\n"
+				<< "Current size: " << currentArea << endl;
 			for (int i = 0; i <= 3; i += 2)//Draw lines to show where the objects are tracked on the HSV Mat
 			{
 				//This creates two lines which is 20 pixels long, crossing over (location[i],location[i+1])
