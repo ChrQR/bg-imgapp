@@ -72,12 +72,12 @@ void EditingTrackbar()
 	namedWindow("Editor");
 	resizeWindow("Editor", 290, 600);
 
-	createTrackbar("A Hue-MIN", "Editor", &H_MIN2, 255); createTrackbar("A Hue-MAX", "Editor", &H_MAX2, 255);
-	createTrackbar("A Sat-MIN", "Editor", &S_MIN2, 255); createTrackbar("A Sat-MAX", "Editor", &S_MAX2, 255);
-	createTrackbar("A Val-MIN", "Editor", &V_MIN2, 255); createTrackbar("A Val-MAX", "Editor", &V_MAX2, 255);
-	createTrackbar("P Hue-MIN", "Editor", &H_MIN1, 255); createTrackbar("P Hue-MAX", "Editor", &H_MAX1, 255);
-	createTrackbar("P Sat-MIN", "Editor", &S_MIN1, 255); createTrackbar("P Sat-MAX", "Editor", &S_MAX1, 255);
-	createTrackbar("P Val-MIN", "Editor", &V_MIN1, 255); createTrackbar("P Val-MAX", "Editor", &V_MAX1, 255);
+	createTrackbar("Player 1 Hue-MIN", "Editor", &H_MIN2, 255); createTrackbar("Player 1 Hue-MAX", "Editor", &H_MAX2, 255);
+	createTrackbar("Player 1 Sat-MIN", "Editor", &S_MIN2, 255); createTrackbar("Player 1 Sat-MAX", "Editor", &S_MAX2, 255);
+	createTrackbar("Player 1 Val-MIN", "Editor", &V_MIN2, 255); createTrackbar("Player 1 Val-MAX", "Editor", &V_MAX2, 255);
+	createTrackbar("Player 2 Hue-MIN", "Editor", &H_MIN1, 255); createTrackbar("Player 2 Hue-MAX", "Editor", &H_MAX1, 255);
+	createTrackbar("Player 2 Sat-MIN", "Editor", &S_MIN1, 255); createTrackbar("Player 2 Sat-MAX", "Editor", &S_MAX1, 255);
+	createTrackbar("Player 2 Val-MIN", "Editor", &V_MIN1, 255); createTrackbar("Player 2 Val-MAX", "Editor", &V_MAX1, 255);
 }
 
 //Saving configuration to a txt file
@@ -206,9 +206,14 @@ void morphOps(Mat &thresh)
 }
 
 // TODO: Rediger her for at tracke spillernes brikker
-vector<int> findCoords(Mat threshold)
+vector< vector <int> > findCoords(Mat threshold)
 {
-	vector<int> blobProperties(3);
+	//Needs to contain the x & y coordinate of a single blob
+	//vector<int> blobProperties(2);
+
+	//contains all of the found objects and their respective x & y coords
+	vector < vector <int> > foundBlobs;
+	
 	//these vectors are needed to save the output of findCountours
 	vector< vector<Point> > contours;
 	vector<Vec4i> hierarchy;
@@ -221,7 +226,7 @@ vector<int> findCoords(Mat threshold)
 	{
 		int numObjects = hierarchy.size();
 		//Checks if the filter may be noisy.
-		if (numObjects <= 1)
+		if (0 < numObjects <= 12)
 		{
 			for (int i = 0; i >= 0; i = hierarchy[i][0])
 			{
@@ -231,60 +236,73 @@ vector<int> findCoords(Mat threshold)
 				if (area > 10)//1728 is the Minimum object area
 				{
 					// TODO: Forøg det antal objecter der bliver fundet
-					blobProperties[0] = (int)(moment.m10 / area);//BLOB X
-					blobProperties[1] = (int)(moment.m01 / area);//BLOB Y
-					blobProperties[2] = (int)area;//BLOB Area
+					foundBlobs[i][0] = (int)(moment.m10 / area);//BLOB X
+					foundBlobs[i][1] = (int)(moment.m01 / area);//BLOB Y
+					foundBlobs[i][2] = (int)area;//BLOB Area
 
 				}
 			}
 		}
-		else
-			blobProperties[2] = -2;//BLOB Area
+		//else
+			//Move might be happening?
+			//Flip a bool to signify that?
+			//blobProperties[2] = -2;//BLOB Area
 	}
-	else
-		blobProperties[2] = -1;//BLOB Area
+	//else
+		//Move might be happening?
+		//Flip a bool to signify that?
+		//blobProperties[2] = -1;//BLOB Area
 
-	return blobProperties;
+	return foundBlobs;
 }
 
 //This function functions calculates the coordinates of the objects and if any player is shooting
-void trackObjects(Mat powerThreshold, Mat angleThreshold, Mat &cameraFeed)
+void trackObjects(Mat playerTwoThreshold, Mat playerOneThreshold, Mat &cameraFeed)
 {
-	vector<int> temp = findCoords(angleThreshold);//Temporary data holder
+	vector< vector<int> > temp = findCoords(playerOneThreshold);//Temporary data holder
 
-	currentArea = temp[2];
-	if (currentArea > 0)
+	for (int i = 0; i < 12; i++)
 	{
-		location[0] = temp[0];//Left angle X
-		location[1] = temp[1];//Left angle Y
-	}
-	else if (debugging)
-	{
-		if (currentArea == -1)
-			cout << "\nNo angle object found!";
-		else if (currentArea == -2)
-			cout << "\nToo many angle objects found!";
-	}
-
-	temp = findCoords(powerThreshold);
-	currentArea = temp[2];
-	if (currentArea > 0)
-	{
-		location[2] = temp[0];//Left power X
-		location[3] = temp[1];//Left power Y
-
-	}
-	else
-	{
-		shooting = false;//If no objects are found the player will not keep shooting.
-		if (debugging)
+		currentArea = temp[i][2];
+		if (currentArea > 0)
+		{
+			location[0] = temp[i][0];
+			location[1] = temp[i][1];
+		}
+		else if (debugging)
 		{
 			if (currentArea == -1)
-				cout << "\nNo power object found!";
+				cout << "\nNo playerOne object found!";
 			else if (currentArea == -2)
-				cout << "\nToo many power objects found!";
+				cout << "\nToo many playerOne objects found!";
 		}
 	}
+
+	temp = findCoords(playerTwoThreshold);
+
+	for (int i = 0; i < 12; i++)
+	{
+		currentArea = temp[2];
+		if (currentArea > 0)
+		{
+			location[2] = temp[0];//Left playerTwo X
+			location[3] = temp[1];//Left playerTwo Y
+
+		}
+		else
+		{
+			shooting = false;//If no objects are found the player will not keep shooting.
+			if (debugging)
+			{
+				if (currentArea == -1)
+					cout << "\nNo playerTwo object found!";
+				else if (currentArea == -2)
+					cout << "\nToo many playerTwo objects found!";
+			}
+		}
+	}
+		
+	
 }
 
 //void broadcast()
@@ -470,10 +488,10 @@ int main()
 		{
 			//These are just notes
 			/*
-			int location[0] angle X
-			int location[1] angle Y
-			int location[2] power X
-			int location[3] power Y
+			int location[0] playerOne X
+			int location[1] playerOne Y
+			int location[2] playerTwo X
+			int location[3] playerTwo Y
 			bool shooting Shot-state
 			*/
 
@@ -503,8 +521,8 @@ int main()
 			{
 				namedWindow("Original Frame", WINDOW_NORMAL); resizeWindow("Original Frame", 640, 360);
 				namedWindow("Subtracted Image", WINDOW_NORMAL); resizeWindow("Subtracted Image", 640, 360);
-				namedWindow("Thresholded Power Controllers", WINDOW_NORMAL); resizeWindow("Thresholded Power Controllers", 640, 360);
-				namedWindow("Thresholded Angle Controllers", WINDOW_NORMAL); resizeWindow("Thresholded Angle Controllers", 640, 360);
+				namedWindow("Thresholded playerTwo Controllers", WINDOW_NORMAL); resizeWindow("Thresholded playerTwo Controllers", 640, 360);
+				namedWindow("Thresholded playerOne Controllers", WINDOW_NORMAL); resizeWindow("Thresholded playerOne Controllers", 640, 360);
 				EditingTrackbar(); 
 
 				editing = true;
@@ -513,8 +531,8 @@ int main()
 			else{
 				destroyWindow("Original Frame");
 				destroyWindow("Subtracted Image");
-				destroyWindow("Thresholded Power Controllers");
-				destroyWindow("Thresholded Angle Controllers");
+				destroyWindow("Thresholded playerTwo Controllers");
+				destroyWindow("Thresholded Player One Controllers");
 				destroyWindow("Editor");
 
 				editing = false;
